@@ -1,0 +1,33 @@
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.styled-table th, .styled-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+.styled-table th {
+  background-color: #003049;
+  color: white;
+}
+
+.btn {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-valider {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.btn-refuser {
+  background-color: #e74c3c;
+  color: white;
+}

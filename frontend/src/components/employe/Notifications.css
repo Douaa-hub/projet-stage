@@ -1,0 +1,88 @@
+.notifications-container {
+  max-width: 700px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 25px 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.notifications-header {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-bottom: 25px;
+}
+
+.notifications-header h3 {
+  font-size: 1.6rem;
+  color: #003049;
+  margin: 0;
+}
+
+.notifications-header svg {
+  color: #fcbf49;
+  margin-right: 12px;
+  transition: transform 0.3s ease;
+}
+
+.notifications-header:hover svg {
+  transform: rotate(15deg);
+  cursor: pointer;
+}
+
+.notifications-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px; /* positionné en haut à droite de l'icône */
+  background-color: #fcbf49;
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.85rem;
+  padding: 5px 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(252, 191, 73, 0.4);
+}
+
+.notifications-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-item {
+  border-left: 4px solid #ccc;
+  background-color: #f9f9f9;
+  padding: 15px 20px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.notification-item:hover {
+  background-color: #fffbe6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-left-color: #fcbf49;
+}
+
+.notification-item.non-lue {
+  background-color: #e8f4fd;
+  border-left-color: #0077b6;
+  font-weight: 600;
+}
+
+.notification-item p {
+  margin: 0;
+  font-size: 15.5px;
+  color: #333;
+}
+
+.notification-item small {
+  display: block;
+  margin-top: 8px;
+  color: #777;
+  font-size: 13px;
+}
+
+

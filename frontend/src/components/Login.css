@@ -1,0 +1,66 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+
+  background-image: url('https://sartexgroup.com/wp-content/uploads/2019/09/BOOK_OF_DENIM_FACTORY_DENIM_HOUSE_01_065_%C2%A9_RENE_HABERMACHER_PREVIEW-600x550.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  position: relative;
+}
+
+.login-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* voile noir transparent */
+  z-index: 0;
+}
+
+.login-box {
+  position: relative;
+  background: white;
+  padding: 2rem 3rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  width: 350px;
+  text-align: center;
+  z-index: 1;
+}
+
+.logo {
+  width: 150px;
+  margin-bottom: 1rem;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background-color: #004C97; /* Couleur Sartex */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #003366;
+}
+
+.error {
+  color: red;
+  font-size: 0.9rem;
+}
