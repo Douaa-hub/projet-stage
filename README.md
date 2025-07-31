@@ -59,7 +59,4 @@ Conception et développement d'une application web de gestion des autorisations 
 
 ---
 
-## Auteur
 
-Douaa Maalel  
-Étudiante en informatique – Stage chez Sartex
