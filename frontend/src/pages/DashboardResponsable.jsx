@@ -1,4 +1,3 @@
-// DashboardResponsable.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { getToken, getUser } from '../services/authService';
@@ -86,7 +85,7 @@ function Sidebar({ onLogout, nbDemandes }) {
   );
 }
 
-function ListeDemandesAValider() {
+function ListeDemandesAValider({ onDemandesChange }) {
   const [demandes, setDemandes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -99,9 +98,11 @@ function ListeDemandesAValider() {
       });
       setDemandes(res.data);
       setError('');
+      onDemandesChange(res.data.length); // On informe le parent du nouveau nombre
     } catch (err) {
       setError("Erreur lors du chargement des demandes.");
       console.error(err);
+      onDemandesChange(0);
     } finally {
       setLoading(false);
     }
@@ -119,7 +120,7 @@ function ListeDemandesAValider() {
         { statut: action },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchDemandes(); // Recharge les demandes
+      fetchDemandes(); // Recharge les demandes et met à jour le parent
     } catch (err) {
       alert("Erreur lors du traitement.");
       console.error(err);
@@ -191,21 +192,22 @@ export default function DashboardResponsable() {
     navigate('/login');
   };
 
-  // Récupérer le nombre de demandes à valider pour la sidebar
-  useEffect(() => {
-    const fetchDemandes = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:3000/demandesortie/responsable/a_valider', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setNbDemandes(res.data.length);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  // Nouvelle fonction fetch qui sera appelée au chargement et après chaque modif
+  const fetchDemandesCount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('http://localhost:3000/demandesortie/responsable/a_valider', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNbDemandes(res.data.length);
+    } catch (error) {
+      console.error(error);
+      setNbDemandes(0);
+    }
+  };
 
-    fetchDemandes();
+  useEffect(() => {
+    fetchDemandesCount();
   }, []);
 
   return (
@@ -214,10 +216,11 @@ export default function DashboardResponsable() {
       <div className="dashboard-layout" style={{ display: 'flex' }}>
         <Sidebar onLogout={handleLogout} nbDemandes={nbDemandes} />
         <main className="dashboard-main" style={{ flex: 1, padding: '1rem' }}>
-          <ListeDemandesAValider />
+          <ListeDemandesAValider onDemandesChange={setNbDemandes} />
         </main>
       </div>
     </>
   );
 }
+
 

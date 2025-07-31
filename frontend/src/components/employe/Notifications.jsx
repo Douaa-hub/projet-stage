@@ -42,14 +42,14 @@ export default function Notifications({ onDemandeValidee }) {
 
     socket.on('nouvelle-notification', (notif) => {
       console.log('Notification reçue via socket:', notif);
-      // On recharge les notifications à chaque nouvelle notification reçue
+      // Recharge la liste à chaque notification reçue
       fetchNotifications();
     });
 
     return () => {
       socket.disconnect();
     };
-  }, []); // [] pour ne créer qu'une connexion socket au montage
+  }, [userId]); // Ajout userId en dépendance pour éviter erreurs
 
   // Marquer la notification comme lue + redirection si besoin
   const handleClick = async (notif) => {
@@ -60,11 +60,16 @@ export default function Notifications({ onDemandeValidee }) {
     if (Number(notif.lu) === 0) {
       try {
         await axios.put(
-          `http://localhost:3000/notifications/${notif.id}/lu`,
+          `http://localhost:3000/notifications/${notif.id}/read`, // <-- corrigé ici
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        await fetchNotifications();
+        // Mise à jour locale plus rapide, évite un reload complet
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notif.id ? { ...n, lu: 1 } : n
+          )
+        );
       } catch (err) {
         console.error('Erreur lors de la mise à jour de la notification comme lue:', err);
       }

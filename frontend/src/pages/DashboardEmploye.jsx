@@ -1,4 +1,3 @@
-// DashboardEmploye.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { getUser, getToken } from '../services/authService';
@@ -7,8 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import './DashboardEmploye.css';
 import Notifications from '../components/employe/Notifications';
 import { io } from 'socket.io-client';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-// Header Component
 function Header() {
   const user = getUser();
   return (
@@ -36,8 +36,7 @@ function Header() {
   );
 }
 
-// Sidebar Component
-function Sidebar({ selected, setSelected, onLogout }) {
+function Sidebar({ selected, setSelected, onLogout, nbNonLues }) {
   const linkStyle = (active) => ({
     display: 'flex',
     alignItems: 'center',
@@ -50,6 +49,7 @@ function Sidebar({ selected, setSelected, onLogout }) {
     marginBottom: '10px',
     userSelect: 'none',
     transition: 'background-color 0.3s',
+    position: 'relative',
   });
 
   return (
@@ -71,6 +71,24 @@ function Sidebar({ selected, setSelected, onLogout }) {
       </div>
       <div style={linkStyle(selected === 'notifications')} onClick={() => setSelected('notifications')}>
         <FaBell style={{ marginRight: 10 }} /> Notifications
+        {nbNonLues > 0 && (
+          <span
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 15,
+              backgroundColor: 'red',
+              color: 'white',
+              borderRadius: '50%',
+              padding: '2px 7px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              userSelect: 'none',
+            }}
+          >
+            {nbNonLues}
+          </span>
+        )}
       </div>
       <div
         style={{ ...linkStyle(false), marginTop: 'auto', color: '#f44336', cursor: 'pointer' }}
@@ -82,7 +100,6 @@ function Sidebar({ selected, setSelected, onLogout }) {
   );
 }
 
-// Nouvelle Demande Component
 function NouvelleDemande({ onSuccess }) {
   const [motif, setMotif] = React.useState('');
   const [dateSortie, setDateSortie] = React.useState('');
@@ -184,7 +201,6 @@ function NouvelleDemande({ onSuccess }) {
   );
 }
 
-// Modale de modification de demande
 function ModifierDemandeModal({ demande, onClose, onUpdated }) {
   const [motif, setMotif] = useState(demande.motif);
   const [dateSortie, setDateSortie] = useState(new Date(demande.date_sortie).toISOString().slice(0, 16));
@@ -249,7 +265,6 @@ function ModifierDemandeModal({ demande, onClose, onUpdated }) {
   );
 }
 
-// Liste Demandes Component
 function ListeDemandes({ reloadTrigger, demandeSelectionneeId, clearHighlight }) {
   const user = getUser();
   const [demandes, setDemandes] = useState([]);
@@ -391,14 +406,51 @@ function ListeDemandes({ reloadTrigger, demandeSelectionneeId, clearHighlight })
   );
 }
 
-// Composant principal DashboardEmploye avec Socket.IO
 export default function DashboardEmploye() {
   const [selected, setSelected] = useState('nouvelle');
   const [reloadTrigger, setReloadTrigger] = useState(0);
   const [demandeSelectionneeId, setDemandeSelectionneeId] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
   const user = getUser();
-  const userId = user?.id; // stable userId variable
+  const userId = user?.id;
+  const userRole = user?.role;
+  const socketRef = React.useRef(null);
+
+  useEffect(() => {
+    if (!userId || !userRole) return;
+
+    socketRef.current = io('http://localhost:3000', { transports: ['websocket'] });
+
+    socketRef.current.emit('join', userId, userRole);
+
+    socketRef.current.on('nouvelle-notification', (notif) => {
+      setNotifications((prev) => [notif, ...prev]);
+      toast.info(notif.message, { autoClose: 5000 });
+      if (notif.type === 'demande_sortie' && notif.id_demande_sortie) {
+        handleDemandeValidee(notif.id_demande_sortie);
+      }
+    });
+
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, [userId, userRole]);
+
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        const token = getToken();
+        const res = await axios.get('http://localhost:3000/notifications', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setNotifications(res.data);
+      } catch (error) {
+        console.error('Erreur chargement notifications:', error);
+      }
+    }
+    fetchNotifications();
+  }, [reloadTrigger]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -420,29 +472,13 @@ export default function DashboardEmploye() {
     }, 5000);
   };
 
-  useEffect(() => {
-    if (!userId) return;
-
-    const socket = io('http://localhost:3000');
-    socket.emit('join', userId);
-
-    socket.on('nouvelle-notification', (notif) => {
-      console.log('Notification reçue via socket:', notif);
-      if (notif.type === 'demande_sortie' && notif.id_demande_sortie) {
-        handleDemandeValidee(notif.id_demande_sortie);
-      }
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []); // tableau vide pour ne créer la socket qu'une fois
+  const nbNonLues = notifications.filter((n) => !n.lu).length;
 
   return (
     <>
       <Header />
       <div className="dashboard-layout" style={{ display: 'flex' }}>
-        <Sidebar selected={selected} setSelected={setSelected} onLogout={handleLogout} />
+        <Sidebar selected={selected} setSelected={setSelected} onLogout={handleLogout} nbNonLues={nbNonLues} />
         <main className="dashboard-main" style={{ flex: 1, padding: '1rem' }}>
           {selected === 'nouvelle' && <NouvelleDemande onSuccess={handleSuccessNewDemand} />}
           {selected === 'liste' && (
@@ -452,9 +488,17 @@ export default function DashboardEmploye() {
               clearHighlight={() => setDemandeSelectionneeId(null)}
             />
           )}
-          {selected === 'notifications' && <Notifications onDemandeValidee={handleDemandeValidee} />}
+          {selected === 'notifications' && (
+            <Notifications
+              notifications={notifications}
+              setNotifications={setNotifications}
+              onDemandeValidee={handleDemandeValidee}
+              onReload={() => setReloadTrigger((prev) => prev + 1)}
+            />
+          )}
         </main>
       </div>
+      <ToastContainer position="top-right" autoClose={5000} />
     </>
   );
 }
